@@ -1,12 +1,25 @@
-#include <faiss/IndexFlat.h>
-
-#include <iostream>
+#include "http_server.h"
+#include "index_factory.h"
+#include "logger.h"
 
 int main() {
-  int dim = 64;                   // 向量维度
-  faiss::IndexFlatL2 index(dim);  // 构建索引
+    // 初始化全局日志记录器
+    init_global_logger();
+    set_log_level(spdlog::level::debug);  // 设置日志级别为debug
 
-  // 使用索引...
+    GlobalLogger->info("Global logger initialized");
 
-  return 0;
+    // 初始化全局IndexFactory实例
+    int dim = 1;  // 向量维度
+    vectordb::IndexFactory* globalIndexFactory =
+        vectordb::getGlobalIndexFactory();
+    globalIndexFactory->init(vectordb::IndexFactory::IndexType::FLAT, dim);
+    GlobalLogger->info("Global IndexFactory initialized");
+
+    // 创建并启动HTTP服务器
+    HttpServer server("localhost", 8080);
+    GlobalLogger->info("HttpServer created");
+    server.start();
+
+    return 0;
 }

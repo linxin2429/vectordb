@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
 project(vectordb VERSION 0.0.1 LANGUAGES CXX)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -26,7 +28,7 @@ add_subdirectory(third_party/googletest)
 
 # RapidJSON是头文件库，只需要包含头文件
 include_directories(third_party/rapidjson/include)
-
+include_directories(third_party/cpp_httplib)
 # 添加项目源文件
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
