@@ -1,0 +1,90 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    # container:
+    #   image: nvidia/cuda:12.4.0-devel-ubuntu22.04  # 选择需要的CUDA版本
+    steps:
+        # 安装依赖
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential git cmake 
+        sudo apt-get install -y libopenblas-dev
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # 获取完整的版本历史用于版本控制
+        submodules: recursive
+    # - name: Install CUDA
+    #   uses: Jimver/cuda-toolkit@v0.2.19
+    #   with:
+    #     cuda: '12.4.0'
+
+    
+    # CMake 构建
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build -j$(nproc)
+
+  version-check:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    # 检查版本号更新
+    - name: Check version bump
+      run: |
+        # 这里需要根据您的项目结构调整版本文件的路径
+        if ! git diff HEAD^ HEAD -- version.txt; then
+          echo "No version change detected"
+          exit 1
+        fi
+
+  release:
+    needs: version-check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    # 读取版本号
+    - name: Get version
+      id: get_version
+      run: |
+        # 根据您的项目调整版本获取方式
+        VERSION=$(cat version.txt)
+        echo "::set-output name=version::$VERSION"
+    
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Release ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+        body: |
+          Release ${{ github.ref_name }}
+        files: | # Add files to include in the release
+          dist/*
+          *.zip

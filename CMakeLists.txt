@@ -15,9 +15,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 option(BUILD_TESTING "Build tests" OFF)
 option(FAISS_ENABLE_GPU "Build GPU version" OFF)
 option(FAISS_ENABLE_PYTHON "Build Python interface" OFF)
-option(FAISS_ENABLE_GPU "Build GPU version" ON)
-enable_language(CUDA)
-find_package(CUDAToolkit REQUIRED)
+option(FAISS_ENABLE_GPU "Build GPU version" OFF)
+# enable_language(CUDA)
+# find_package(CUDAToolkit REQUIRED)
 
 
 # 添加第三方库
@@ -63,3 +63,5 @@ target_include_directories(${PROJECT_NAME}
 # 启用测试
 enable_testing()
 add_subdirectory(tests)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
